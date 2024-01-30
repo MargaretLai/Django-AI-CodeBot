@@ -5,7 +5,7 @@ from django import forms
 
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(
-        Label="",
+        label="",
         widget=forms.TextInput(
             attrs={
                 "class": "form-control",
