@@ -31,7 +31,7 @@ class SignUpForm(UserCreationForm):
     )
 
     class Meta:
-        models = User
+        model = User
         fields = (
             "username",
             "first_name",
