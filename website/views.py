@@ -1,78 +1,82 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-import openai
+from openai import OpenAI
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from .forms import SignUpForm
 from .models import Code
 
+client = OpenAI(api_key="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")
 
+
+# Create your views here.
 def home(request):
     lang_list = [
-        "c",
-        "clike",
-        "cpp",
-        "csharp",
-        "css",
-        "dart",
-        "django",
-        "go",
         "html",
-        "java",
+        "css",
         "javascript",
-        "markup",
-        "markup-templating",
-        "matlab",
+        "aspnet",
+        "bash",
+        "c",
+        "c#",
+        "c++",
+        "docker",
+        "git",
+        "go",
+        "http",
+        "java",
+        "json",
+        "kotlin",
+        "makefile",
         "mongodb",
-        "objectivec",
-        "perl",
         "php",
-        "powershell",
         "python",
-        "r",
-        "regex",
+        "jsx",
         "ruby",
-        "rust",
         "sass",
-        "scala",
         "sql",
-        "swift",
-        "yaml",
+        "typescript",
     ]
+
+    lang_list.sort()
 
     if request.method == "POST":
         code = request.POST["code"]
         lang = request.POST["lang"]
 
-        # Check to make sure they picked a lang
-        if lang == "Select Programming Language":
-            messages.success(
-                request, "Hey! You Forgot To Pick A Programming Language..."
-            )
+        if lang == "Select Programming Languages":
+            messages.success(request, "Please choose a proragmming language!")
             return render(
                 request,
                 "home.html",
-                {"lang_list": lang_list, "response": code, "code": code, "lang": lang},
+                {"lang_list": lang_list, "code": code, "lang": lang},
             )
         else:
-            # OpenAI Key
-            openai.api_key = "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"
+            # OpenAI Key moved to the top
+
             # Create OpenAI Instance
-            openai.Model.list()
-            # Make an OpenAI Request
+            client.models.list()
+
+            # Make a request
             try:
-                response = openai.Completion.create(
-                    engine="text-davinci-003",
+                response = client.completions.create(
                     prompt=f"Respond only with code. Fix this {lang} code: {code}",
                     temperature=0,
-                    max_tokens=1000,
+                    max_tokens=2000,
                     top_p=1.0,
                     frequency_penalty=0.0,
                     presence_penalty=0.0,
+                    model="gpt-3.5-turbo-instruct",
                 )
+
                 # Parse the response
-                response = (response["choices"][0]["text"]).strip()
-                # Save To Database
+                # Assuming 'response' is the Completion object
+                choices = response.choices
+                if choices:
+                    generated_text = choices[0].text.strip()
+                else:
+                    generated_text = "No choices found in the response."
+
                 record = Code(
                     question=code,
                     code_answer=response,
@@ -84,9 +88,8 @@ def home(request):
                 return render(
                     request,
                     "home.html",
-                    {"lang_list": lang_list, "response": response, "lang": lang},
+                    {"lang_list": lang_list, "response": generated_text, "lang": lang},
                 )
-
             except Exception as e:
                 return render(
                     request,
@@ -99,71 +102,69 @@ def home(request):
 
 def suggest(request):
     lang_list = [
-        "c",
-        "clike",
-        "cpp",
-        "csharp",
-        "css",
-        "dart",
-        "django",
-        "go",
         "html",
-        "java",
+        "css",
         "javascript",
-        "markup",
-        "markup-templating",
-        "matlab",
+        "aspnet",
+        "bash",
+        "c",
+        "c#",
+        "c++",
+        "docker",
+        "git",
+        "go",
+        "http",
+        "java",
+        "json",
+        "kotlin",
+        "makefile",
         "mongodb",
-        "objectivec",
-        "perl",
         "php",
-        "powershell",
         "python",
-        "r",
-        "regex",
+        "jsx",
         "ruby",
-        "rust",
         "sass",
-        "scala",
         "sql",
-        "swift",
-        "yaml",
+        "typescript",
     ]
+
+    lang_list.sort()
 
     if request.method == "POST":
         code = request.POST["code"]
         lang = request.POST["lang"]
 
-        # Check to make sure they picked a lang
-        if lang == "Select Programming Language":
-            messages.success(
-                request, "Hey! You Forgot To Pick A Programming Language..."
-            )
+        if lang == "Select Programming Languages":
+            messages.success(request, "Please choose a proragmming language!")
             return render(
                 request,
                 "suggest.html",
-                {"lang_list": lang_list, "code": code, "lang": lang, "response": code},
+                {"lang_list": lang_list, "code": code, "lang": lang},
             )
         else:
-            # OpenAI Key
-            openai.api_key = "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"
             # Create OpenAI Instance
-            openai.Model.list()
-            # Make an OpenAI Request
+            client.models.list()
+
+            # Make a request
             try:
-                response = openai.Completion.create(
-                    engine="text-davinci-003",
-                    prompt=f"Respond only with code. Using {lang}. {code}",
+                response = client.completions.create(
+                    prompt=f"Respond only with code. {code}",
                     temperature=0,
-                    max_tokens=1000,
+                    max_tokens=2000,
                     top_p=1.0,
                     frequency_penalty=0.0,
                     presence_penalty=0.0,
+                    model="gpt-3.5-turbo-instruct",
                 )
-                # Parse the response
-                response = (response["choices"][0]["text"]).strip()
 
-                # Save To Database
+                # Parse the response
+                # Assuming 'response' is the Completion object
+                choices = response.choices
+                if choices:
+                    generated_text = choices[0].text.strip()
+                else:
+                    generated_text = "No choices found in the response."
+
                 record = Code(
                     question=code,
                     code_answer=response,
@@ -175,9 +176,8 @@ def suggest(request):
                 return render(
                     request,
                     "suggest.html",
-                    {"lang_list": lang_list, "response": response, "lang": lang},
+                    {"lang_list": lang_list, "response": generated_text, "lang": lang},
                 )
-
             except Exception as e:
                 return render(
                     request,
@@ -195,10 +195,10 @@ def login_user(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            messages.success(request, "You Have Been Logged In!  Woohoo!")
+            messages.success(request, "You have been logged in.")
             return redirect("home")
         else:
-            messages.success(request, "Error Logging In. Please Try Again...")
+            messages.success(request, "Error logging in. Please try again.")
             return redirect("home")
     else:
         return render(request, "home.html", {})
@@ -206,7 +206,7 @@ def login_user(request):
 
 def logout_user(request):
     logout(request)
-    messages.success(request, "You Have Been Logged Out... Have A Nice Day!")
+    messages.success(request, "You have been logged out. Have a nice day.")
     return redirect("home")
 
 
@@ -219,9 +219,8 @@ def register_user(request):
             password = form.cleaned_data["password1"]
             user = authenticate(username=username, password=password)
             login(request, user)
-            messages.success(request, "You Have Registered...Congrats!!")
+            messages.success(request, "Successfully registered.")
             return redirect("home")
-
     else:
         form = SignUpForm()
 
