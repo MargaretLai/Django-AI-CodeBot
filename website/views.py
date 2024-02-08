@@ -6,7 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from .forms import SignUpForm
 from .models import Code
 
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="")
 
 
 # Create your views here.
